@@ -24,6 +24,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.opentechlancer.appusagemetrics.common.AppsDatabaseHelper;
+
+import android.net.Uri;
 
 import com.opentechlancer.appusagemetrics.model.AppEvent;
 import com.opentechlancer.appusagemetrics.model.UsageMetrics;
@@ -36,7 +39,7 @@ import static com.opentechlancer.appusagemetrics.common.Constants.INTENT_APP_EVE
 
 public class MainActivity extends AppCompatActivity implements AppUsageMetricsQueryTask.AppUsageMetricsQueryTaskListener {
 
-    private static final String TAG = "AppUsageMetrics";
+    private static final String TAG = "Remote App Usage Monitor";
 
     private UsageListAdapter mUsageListAdapter;
     private RecyclerView mRecyclerView;
@@ -82,7 +85,14 @@ public class MainActivity extends AppCompatActivity implements AppUsageMetricsQu
         if (isAppUsageAccessGranted()) {
             queryUsageMetrics();
         } else {
-            showDialogToGrantAppUsageAccess();
+            //showDialogToGrantAppUsageAccess();
+            /*Intent intent = new Intent(Intent.ACTION_DELETE);
+            //io.technikh.appusagemetrics
+            //intent.setData(Uri.parse("package:com.android.calculator2"));
+            // intent.setData(Uri.parse("package:com.amazon.kindle"));
+            //intent.setData(Uri.parse("package:com.binerx.aptrax"));
+            intent.setData(Uri.parse("package:com.amazon.calculator"));
+            startActivity(intent);*/
         }
     }
 
@@ -103,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements AppUsageMetricsQu
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == R.id.menu_item_refresh) {
+            getAllowedAppsfromAPI();
             queryUsageMetrics();
             return true;
         }
@@ -168,6 +179,21 @@ public class MainActivity extends AppCompatActivity implements AppUsageMetricsQu
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.MONTH, -1);
         mAppUsageMetricsQueryTask.queryUsageEventList(calendar.getTimeInMillis());
+    }
+
+    /*private AppsDatabaseHelper.EventSaveListener mEventSaveListener = new AppsDatabaseHelper.EventSaveListener() {
+        @Override
+        public void onEventSaved(long id) {
+            LocalBroadcastManager.getInstance(AppUsageMetricsService.this).sendBroadcast(new Intent(Constants.INTENT_APP_EVENT_ADDED));
+        }
+    };*/
+    /*
+    http://eschool2go.org/api/v2/apps/a2fc0333-6b24-4fcc-b1cd-13c4c0c0b55c
+    populate app database https://developer.android.com/training/basics/data-storage/databases.html
+     */
+    private void getAllowedAppsfromAPI() {
+        String packageName = "123";
+        AppsDatabaseHelper.getInstance().saveEventToDbAsync(packageName);
     }
 
     private void customEventListQueryCompleted(List<AppEvent> eventList) {

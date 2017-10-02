@@ -25,33 +25,26 @@ import java.util.List;
 /**
  * A helper class for interacting with sqlite database
  */
-public class DatabaseHelper {
+public class AppsDatabaseHelper {
 
-    private static DatabaseHelper dbHelper;
+    private static AppsDatabaseHelper dbHelper;
     private DatabaseHelperInternal mDbHelperInternal;
 
-    private DatabaseHelper(Context context) {
+    private AppsDatabaseHelper(Context context) {
         mDbHelperInternal = new DatabaseHelperInternal(context);
     }
 
     public static void initialize(Context context) {
-        dbHelper = new DatabaseHelper(context.getApplicationContext());
+        dbHelper = new AppsDatabaseHelper(context.getApplicationContext());
     }
 
-    public static DatabaseHelper getInstance() {
+    public static AppsDatabaseHelper getInstance() {
         return dbHelper;
     }
 
-    public void saveEventToDbAsync(String appName, String packageName, String durationString, String launchTimestamp, EventSaveListener listener) {
-        new SaveToDbTask(mDbHelperInternal, listener).execute(
-                Constants.PAYLOAD_VALUE_VERSION,
-                Constants.PAYLOAD_VALUE_CATEGORY,
-                Constants.PAYLOAD_VALUE_ACTION,
-                appName,
-                packageName,
-                Constants.PAYLOAD_VALUE_LABEL,
-                durationString,
-                launchTimestamp);
+    public void saveEventToDbAsync(String packageName) {
+        new SaveToDbTask(mDbHelperInternal).execute(
+                packageName);
     }
 
     public JSONArray retrieveEvents(int count) {
@@ -79,9 +72,8 @@ public class DatabaseHelper {
         private WeakReference<DatabaseHelperInternal> mDbHelperInternalRef;
         private WeakReference<EventSaveListener> mListenerRef;
 
-        private SaveToDbTask(DatabaseHelperInternal dbHelperInternal, EventSaveListener listener) {
+        private SaveToDbTask(DatabaseHelperInternal dbHelperInternal) {
             mDbHelperInternalRef = new WeakReference<>(dbHelperInternal);
-            mListenerRef = new WeakReference<>(listener);
         }
 
         @Override
@@ -94,14 +86,14 @@ public class DatabaseHelper {
             }
             return rowId;
         }
-
+/*
         @Override
         protected void onPostExecute(Long result) {
             EventSaveListener listener = mListenerRef.get();
             if (listener != null) {
                 listener.onEventSaved(result);
             }
-        }
+        }*/
     }
 
     private static class DatabaseHelperInternal extends SQLiteOpenHelper {
@@ -264,5 +256,51 @@ public class DatabaseHelper {
 
     public interface EventSaveListener {
         void onEventSaved(long id);
+    }
+
+    private static class AppsDatabaseHelperInternal extends SQLiteOpenHelper {
+        private static final String DATABASE_NAME = "app_usage_metrics";
+        private static final String TABLE_NAME = "allowed_apps";
+        private static final int VERSION = 1;
+
+        private final static String[] columns = {
+                Constants.PAYLOAD_KEY_ID,
+                Constants.COLUMN_PACKAGE_NAME,
+        };
+
+        private class Column {
+            private static final int ID = 0;
+            private static final int PACKAGE_NAME = 1;
+        }
+
+        private AppsDatabaseHelperInternal(Context context) {
+            super(context, DATABASE_NAME, null, VERSION, null);
+        }
+
+        @Override
+        public void onCreate(SQLiteDatabase db) {
+            String createTableSql = "CREATE TABLE IF NOT EXISTS "
+                    + TABLE_NAME
+                    + " (" + Constants.PAYLOAD_KEY_ID + " INTEGER PRIMARY KEY, "
+                    + Constants.COLUMN_PACKAGE_NAME + " TEXT, ";
+
+            db.execSQL(createTableSql);
+        }
+
+        @Override
+        public void onUpgrade(SQLiteDatabase db, int oldVersion, int newVersion) {
+            // Do nothing for now
+        }
+
+        @Override
+        public void onOpen(SQLiteDatabase db) {
+            // Do nothing for now
+        }
+
+        private long insert(String version, String category, String action, String location, String packageName, String label, long value, long created) {
+            ContentValues data = new ContentValues();
+            data.put(columns[Column.PACKAGE_NAME], packageName);
+            return getWritableDatabase().insert(TABLE_NAME, null, data);
+        }
     }
 }

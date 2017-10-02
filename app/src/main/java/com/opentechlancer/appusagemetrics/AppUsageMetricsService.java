@@ -18,6 +18,7 @@ import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.opentechlancer.appusagemetrics.common.Constants;
 import com.opentechlancer.appusagemetrics.common.DatabaseHelper;
@@ -175,7 +176,7 @@ public class AppUsageMetricsService extends Service {
 
     private void processAppEvent() {
         try {
-            //Log.d("AppUsageMetrics", "#### processAppEvent().package:" + mUsageEvent.getPackageName() + ",event:" + mUsageEvent.getEventType());
+            Log.d("AppUsageMetrics", "#### processAppEvent().package:" + mUsageEvent.getPackageName() + ",event:" + mUsageEvent.getEventType());
             String packageName = mUsageEvent.getPackageName();
 
             /** When device is no more interactive i.e., screen is off, the current app in foreground goes to background.
