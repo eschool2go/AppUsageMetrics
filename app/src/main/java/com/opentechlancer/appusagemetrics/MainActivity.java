@@ -1,5 +1,6 @@
 package com.opentechlancer.appusagemetrics;
 
+import android.annotation.SuppressLint;
 import android.app.usage.UsageEvents;
 import android.app.usage.UsageStats;
 import android.app.usage.UsageStatsManager;
@@ -11,6 +12,9 @@ import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
+import android.net.wifi.p2p.WifiP2pDevice;
+import android.net.wifi.p2p.WifiP2pDeviceList;
+import android.net.wifi.p2p.WifiP2pManager;
 import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v4.content.LocalBroadcastManager;
@@ -24,6 +28,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.opentechlancer.appusagemetrics.model.AppEvent;
 import com.opentechlancer.appusagemetrics.model.UsageMetrics;
@@ -34,7 +39,8 @@ import java.util.List;
 
 import static com.opentechlancer.appusagemetrics.common.Constants.INTENT_APP_EVENT_ADDED;
 
-public class MainActivity extends AppCompatActivity implements AppUsageMetricsQueryTask.AppUsageMetricsQueryTaskListener {
+public class MainActivity extends AppCompatActivity implements
+        AppUsageMetricsQueryTask.AppUsageMetricsQueryTaskListener {
 
     private static final String TAG = "AppUsageMetrics";
 
@@ -46,7 +52,10 @@ public class MainActivity extends AppCompatActivity implements AppUsageMetricsQu
     private long mCurrentAppLaunchTimestamp;
     private AlertDialog mGrantAppUsageAccessDialog;
 
+    private List<WifiP2pDevice> peers = new ArrayList<WifiP2pDevice>();
+
     private static final int REQUEST_ACTIVITY_ALLOW_USAGE_ACCESS = 100;
+    BroadcastReceiver receiver;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -64,6 +73,16 @@ public class MainActivity extends AppCompatActivity implements AppUsageMetricsQu
         mRecyclerView.scrollToPosition(0);
         mRecyclerView.setAdapter(mUsageListAdapter);
 
+        receiver = new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if(intent.getAction().equals("events")) {
+                    Toast.makeText(context, intent.getStringExtra("val"), Toast.LENGTH_SHORT).show();
+                }
+            }
+        };
+
+        LocalBroadcastManager.getInstance(this).registerReceiver(receiver, new IntentFilter("events"));
         Intent intent = new Intent(this, AppUsageMetricsService.class);
         startService(intent);
 
@@ -157,7 +176,8 @@ public class MainActivity extends AppCompatActivity implements AppUsageMetricsQu
     private boolean isAppUsageAccessGranted() {
         Calendar calendar = Calendar.getInstance();
         calendar.add(Calendar.DAY_OF_MONTH, -2);
-        List<UsageStats> statses = ((UsageStatsManager) getSystemService("usagestats")).queryUsageStats(UsageStatsManager.INTERVAL_DAILY, calendar.getTimeInMillis(), System.currentTimeMillis());
+        @SuppressLint("WrongConstant") List<UsageStats> statses = ((UsageStatsManager) getSystemService("usagestats"))
+                .queryUsageStats(UsageStatsManager.INTERVAL_DAILY, calendar.getTimeInMillis(), System.currentTimeMillis());
         return statses.size() != 0;
     }
 

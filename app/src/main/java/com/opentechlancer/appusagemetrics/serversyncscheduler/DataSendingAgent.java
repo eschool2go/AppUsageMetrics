@@ -1,7 +1,10 @@
 package com.opentechlancer.appusagemetrics.serversyncscheduler;
 
+import android.os.Build;
 import android.util.Log;
 
+import com.opentechlancer.appusagemetrics.Constant.SharedPreferencesDB;
+import com.opentechlancer.appusagemetrics.common.App;
 import com.opentechlancer.appusagemetrics.common.Constants;
 
 import org.json.JSONArray;
@@ -9,6 +12,11 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.util.ArrayList;
+import java.util.List;
 
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -34,28 +42,45 @@ class DataSendingAgent {
         mHttpClient = new OkHttpClient();
     }
 
-    public String syncEvents(JSONArray eventArray, String clientCode) throws JSONException, IOException {
+    public List<String> syncEvents(JSONArray eventArray, String clientCode) throws JSONException, IOException {
         //Log.d(TAG, "#### inside syncEvents");
         String responseBody = null;
         String postBody = buildFullPayload(eventArray, clientCode);
         //Log.d(TAG, "#### payload:" + postBody);
-        final Request request = new Request.Builder()
-                .url(Constants.API_ENDPOINT)
-                .post(RequestBody.create(MEDIA_TYPE_JSON, postBody))
-                .build();
+        List<String> responses = new ArrayList<>();
 
-        Response response = null;
-        try {
-            response = mHttpClient.newCall(request).execute();
-            //Log.d(TAG, "#### response code:" + response.code());
-            responseBody = response.body().string();
-            //Log.d(TAG, "#### response body:" + responseBody);
-        } finally {
-            if (response != null) {
-                response.close();
+        List<String> addresses = SharedPreferencesDB.getInstance(App.ctx).
+                getPreferenceListValue("ips");
+
+        if(addresses.isEmpty()) {
+            Log.e("DATASENDAGENT", "NO SERVER");
+            addresses.add(Constants.API_ENDPOINT);
+        }
+
+        for (String serverAdd : addresses) {
+            Log.e("sending  update", "to " + serverAdd);
+
+            final Request request = new Request.Builder()
+                    .url(serverAdd)
+                    .post(RequestBody.create(MEDIA_TYPE_JSON, postBody))
+                    .build();
+
+            Response response = null;
+            try {
+                response = mHttpClient.newCall(request).execute();
+                //Log.d(TAG, "#### response code:" + response.code());
+                responseBody = response.body().string();
+                Log.e("responcsr", responseBody);
+                responses.add(responseBody);
+                //Log.d(TAG, "#### response body:" + responseBody);
+            } finally {
+                if (response != null) {
+                    response.close();
+                }
             }
         }
-        return responseBody;
+
+        return responses;
     }
 
     private String buildFullPayload(JSONArray events, String clientCode) throws JSONException {

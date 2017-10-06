@@ -77,9 +77,10 @@ public class ServerSyncService extends JobService {
                 }
 
                 // send to server
+
                 DataSendingAgent agent = new DataSendingAgent();
                 String clientCode = params[0];
-                String responseBody = agent.syncEvents(jsonizedEvents, clientCode);
+                List<String> responseBody = agent.syncEvents(jsonizedEvents, clientCode);
 
                 // parse server response
                 List<Long> eventIds = parseResponse(responseBody);
@@ -105,21 +106,25 @@ public class ServerSyncService extends JobService {
             }
         }
 
-        private List<Long> parseResponse(String responseBody) throws JSONException {
-            //Log.d(TAG, "#### inside parseResponse");
+        private List<Long> parseResponse(List<String> responseBodies) throws JSONException {
             ArrayList<Long> receivedEvents = new ArrayList<>();
-            JSONObject responseObj = new JSONObject(responseBody);
-            String status = responseObj.getString(Constants.RESPONSE_KEY_STATUS);
-            if (Constants.RESPONSE_VALUE_SUCCESS.equals(status)) {
-                JSONArray events = responseObj.getJSONArray(Constants.RESPONSE_KEY_RECEIVED);
-                if (events != null && events.length() > 0) {
-                    for (int i = 0; i < events.length(); i++) {
-                        receivedEvents.add(events.getLong(i));
+
+            //Log.d(TAG, "#### inside parseResponse");
+            for(String responseBody: responseBodies) {
+                JSONObject responseObj = new JSONObject(responseBody);
+                String status = responseObj.getString(Constants.RESPONSE_KEY_STATUS);
+                if (Constants.RESPONSE_VALUE_SUCCESS.equals(status)) {
+                    JSONArray events = responseObj.getJSONArray(Constants.RESPONSE_KEY_RECEIVED);
+                    if (events != null && events.length() > 0) {
+                        for (int i = 0; i < events.length(); i++) {
+                            receivedEvents.add(events.getLong(i));
+                        }
                     }
                 }
+                return receivedEvents;
             }
-            //Log.d(TAG, "#### receivedEvents:" + receivedEvents);
-            return receivedEvents;
+
+            return new ArrayList<>();
         }
     }
 }

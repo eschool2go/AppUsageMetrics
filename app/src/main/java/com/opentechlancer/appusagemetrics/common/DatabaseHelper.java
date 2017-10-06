@@ -6,6 +6,7 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
+import android.util.Log;
 
 import com.opentechlancer.appusagemetrics.model.AppEvent;
 
@@ -256,7 +257,8 @@ public class DatabaseHelper {
             for (Long id : eventIds) {
                 eventIdsSb.append(id).append(",");
             }
-            eventIdsSb.deleteCharAt(eventIdsSb.length() - 1);
+            if(eventIdsSb.length() > 0)
+                eventIdsSb.deleteCharAt(eventIdsSb.length() - 1);
             String whereClause = columns[Column.ID] + " IN (" + eventIdsSb.toString() + ")";
             return getWritableDatabase().update(TABLE_NAME, contentValues, whereClause, null);
         }
