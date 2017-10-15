@@ -28,7 +28,8 @@ public class JobSchedulerHelper {
     }
 
     public void scheduleServerSyncJob() {
-        JobInfo.Builder jobInfoBuilder = new JobInfo.Builder(SERVER_SYNC_JOB_ID, new ComponentName(mContext, ServerSyncService.class));
+        JobInfo.Builder jobInfoBuilder = new JobInfo.Builder(SERVER_SYNC_JOB_ID, new ComponentName(mContext,
+                ServerSyncService.class));
         jobInfoBuilder.setPeriodic(JOB_RUNNING_INTERVAL);
         jobInfoBuilder.setPersisted(true);
         jobInfoBuilder.setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY);

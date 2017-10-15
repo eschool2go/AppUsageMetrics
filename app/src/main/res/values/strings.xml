@@ -14,4 +14,11 @@
     <string name="pref_key_client_code">client_code</string>
     <string name="pref_title_client_code">Client code</string>
     <string name="pref_default_client_code">1234</string>
+
+    <string name="p2p_sender_service_notification_header">App Usage Metrics Wifi Hotspot Enabled</string>
+    <string name="p2p_sender_service_init_notification_header">Initiating Master Hotspot&#8230;</string>
+    <string name="p2p_sender_hint_connecting">Initializing Wifi Hotspot&#8230;</string>
+    <string name="p2p_sender_close_warning">Do you want to stop sharing files?</string>
+    <string name="p2p_sender_shared_list_label"><u>Shared files: </u></string>
+
 </resources>

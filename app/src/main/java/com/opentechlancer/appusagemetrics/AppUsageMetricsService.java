@@ -1,5 +1,6 @@
 package com.opentechlancer.appusagemetrics;
 
+import android.app.Application;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
@@ -11,6 +12,8 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ApplicationInfo;
 import android.content.pm.PackageManager;
+import android.net.nsd.NsdManager;
+import android.net.nsd.NsdServiceInfo;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.IBinder;
@@ -18,12 +21,19 @@ import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.text.TextUtils;
+import android.util.Log;
 
+import com.opentechlancer.appusagemetrics.Constant.ConnectionUtils;
+import com.opentechlancer.appusagemetrics.Constant.CreateStreamServer;
+import com.opentechlancer.appusagemetrics.Constant.NsdHelper;
+import com.opentechlancer.appusagemetrics.Constant.SharedPreferencesDB;
+import com.opentechlancer.appusagemetrics.common.App;
 import com.opentechlancer.appusagemetrics.common.Constants;
 import com.opentechlancer.appusagemetrics.common.DatabaseHelper;
 import com.opentechlancer.appusagemetrics.model.AppEvent;
 import com.opentechlancer.appusagemetrics.serversyncscheduler.JobSchedulerHelper;
 
+import java.io.IOException;
 import java.util.List;
 
 /**
@@ -39,6 +49,8 @@ public class AppUsageMetricsService extends Service {
     private Handler mMonitorThreadHandler;
     private HandlerThread mMonitorThread;
 
+    private String MASTER_SERVICE_TYPE = "_master._tcp";
+
     /**
      * The last launched (i.e. foreground) app's package name
      */
@@ -53,6 +65,7 @@ public class AppUsageMetricsService extends Service {
     private static final long DELAY = 6 * 1000;  // in milliseconds
 
     private static final String IGNORED_PACKAGES_REGEX = "com\\.android\\.systemui";
+    NsdHelper helper;
 
     @Override
     public void onCreate() {
@@ -73,6 +86,18 @@ public class AppUsageMetricsService extends Service {
         mAppUsageMetricsQueryTask.setAppUsageMetricsQueryTaskListener(mListener);
         mIsMonitoring = false;
         mJobSchedulerHelper = new JobSchedulerHelper(this);
+
+        helper = new NsdHelper(this);
+        helper.initializeNsd();
+
+        if(SharedPreferencesDB.getInstance(this).getPreferenceBooleanValue("isMaster"
+                , true)) {
+            try {
+                startServer();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     @Override
@@ -274,4 +299,9 @@ public class AppUsageMetricsService extends Service {
             continueAppEventMonitoring();
         }
     };
+
+    private void startServer() throws IOException {
+        CreateStreamServer server = new CreateStreamServer(this);
+        helper.registerService(ConnectionUtils.getPort(this));
+    }
 }
