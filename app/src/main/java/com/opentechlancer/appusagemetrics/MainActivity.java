@@ -42,7 +42,7 @@ import static com.opentechlancer.appusagemetrics.common.Constants.INTENT_APP_EVE
 public class MainActivity extends AppCompatActivity implements
         AppUsageMetricsQueryTask.AppUsageMetricsQueryTaskListener {
 
-    private static final String TAG = "AppUsageMetrics";
+    private static final String TAG = "MasterAppUsageMetrics";
 
     private UsageListAdapter mUsageListAdapter;
     private RecyclerView mRecyclerView;
@@ -97,11 +97,11 @@ public class MainActivity extends AppCompatActivity implements
         mCurrentAppLaunchTimestamp = System.currentTimeMillis();
 
         registerAppEventAddedBroadcast();
-
+        //queryUsageMetrics();
         if (isAppUsageAccessGranted()) {
             queryUsageMetrics();
         } else {
-            showDialogToGrantAppUsageAccess();
+            //showDialogToGrantAppUsageAccess();
         }
     }
 
@@ -182,6 +182,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void queryUsageMetrics() {
+        Log.d(TAG, "#### inside queryUsageMetrics");
         hideNoStatsText();
         invalidateOptionsMenu();
         showProgressBar();

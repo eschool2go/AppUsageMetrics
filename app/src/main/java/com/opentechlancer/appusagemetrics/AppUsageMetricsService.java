@@ -50,6 +50,7 @@ public class AppUsageMetricsService extends Service {
     private HandlerThread mMonitorThread;
 
     private String MASTER_SERVICE_TYPE = "_master._tcp";
+    private static final String TAG = "MasterAppUsageMetrics";
 
     /**
      * The last launched (i.e. foreground) app's package name
@@ -69,6 +70,7 @@ public class AppUsageMetricsService extends Service {
 
     @Override
     public void onCreate() {
+        Log.d(TAG, "#### inside onCreate");
         mPowerManager = (PowerManager) getSystemService(POWER_SERVICE);
         mNotificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         mLastLaunchedPackageName = null;
@@ -89,12 +91,14 @@ public class AppUsageMetricsService extends Service {
 
         helper = new NsdHelper(this);
         helper.initializeNsd();
-
+        Log.d(TAG, "#### checking if master");
         if(SharedPreferencesDB.getInstance(this).getPreferenceBooleanValue("isMaster"
                 , true)) {
             try {
+                Log.d(TAG, "#### before startServer");
                 startServer();
             } catch (IOException e) {
+                Log.d(TAG, "#### before printStackTrace");
                 e.printStackTrace();
             }
         }
@@ -302,6 +306,7 @@ public class AppUsageMetricsService extends Service {
 
     private void startServer() throws IOException {
         CreateStreamServer server = new CreateStreamServer(this);
+        Log.d(TAG, "#### before registerService");
         helper.registerService(ConnectionUtils.getPort(this));
     }
 }

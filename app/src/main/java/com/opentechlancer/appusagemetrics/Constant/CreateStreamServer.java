@@ -67,13 +67,16 @@ public class CreateStreamServer {
             HTTP_BADREQUEST = "400 Bad Request",
             HTTP_416 = "416 Range not satisfiable",
             HTTP_INTERNALERROR = "500 Internal Server Error";
+    public static final String TAG = "NSDHelperAppUsage: ";
 
     private static int findFreePort() {
         ServerSocket socket = null;
         try {
             socket = new ServerSocket(0);
             socket.setReuseAddress(true);
+            Log.e(TAG, "before getLocalPort");
             int port = socket.getLocalPort();
+            Log.e(TAG, String.format("port = %d", port));
             try {
                 socket.close();
             } catch (IOException e) {
